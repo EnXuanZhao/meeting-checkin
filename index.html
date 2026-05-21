@@ -1,0 +1,519 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>會議簽到系統</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #f5f5f3;
+      --surface: #ffffff;
+      --surface-2: #f1efe8;
+      --text: #1a1a18;
+      --text-2: #5f5e5a;
+      --text-3: #888780;
+      --border: rgba(0,0,0,0.12);
+      --border-2: rgba(0,0,0,0.2);
+      --blue: #185FA5;
+      --blue-bg: #E6F1FB;
+      --blue-dark: #0C447C;
+      --green-bg: #EAF3DE;
+      --green-text: #3B6D11;
+      --red: #D85A30;
+      --radius-md: 8px;
+      --radius-lg: 12px;
+    }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Noto Sans TC", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      padding: 2rem 1rem;
+    }
+    .page { display: none; }
+    .page.active { display: block; }
+    .center { max-width: 540px; margin: 0 auto; }
+    .center-sm { max-width: 380px; margin: 0 auto; }
+    .card {
+      background: var(--surface);
+      border: 0.5px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 1.5rem 1.75rem;
+    }
+    .logo-circle {
+      width: 56px; height: 56px; border-radius: 50%;
+      display: inline-flex; align-items: center; justify-content: center;
+      margin-bottom: 12px;
+    }
+    .text-center { text-align: center; }
+    h1 { font-size: 22px; font-weight: 600; margin-bottom: 6px; }
+    h2 { font-size: 20px; font-weight: 600; margin-bottom: 6px; }
+    .subtitle { font-size: 14px; color: var(--text-2); margin-bottom: 2rem; }
+    .field { margin-bottom: 18px; }
+    .field label { display: block; font-size: 13px; color: var(--text-2); font-weight: 500; margin-bottom: 6px; }
+    .required { color: var(--red); margin-left: 3px; }
+    input[type="text"], input[type="password"] {
+      width: 100%; padding: 10px 14px; font-size: 15px;
+      border: 0.5px solid var(--border-2);
+      border-radius: var(--radius-md);
+      background: var(--surface);
+      color: var(--text);
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+      font-family: inherit;
+    }
+    input:focus { border-color: var(--blue); box-shadow: 0 0 0 3px rgba(24,95,165,0.12); }
+    input.error { border-color: var(--red); }
+    .err-msg { font-size: 12px; color: var(--red); margin-top: 5px; display: none; }
+    .err-msg.show { display: block; }
+    .btn {
+      cursor: pointer; font-family: inherit; font-size: 15px; font-weight: 500;
+      padding: 11px 20px; border-radius: var(--radius-md);
+      border: none; width: 100%; transition: background 0.15s, transform 0.1s;
+    }
+    .btn:active { transform: scale(0.98); }
+    .btn-primary { background: var(--blue); color: #fff; }
+    .btn-primary:hover { background: var(--blue-dark); }
+    .btn-outline {
+      background: transparent; color: var(--text);
+      border: 0.5px solid var(--border-2);
+      font-size: 13px; padding: 8px 16px; width: auto;
+    }
+    .btn-outline:hover { background: var(--surface-2); }
+    .btn-danger { color: var(--red); border-color: rgba(216,90,48,0.35); }
+    .btn-info { color: var(--blue); border-color: rgba(24,95,165,0.35); }
+    .note-row { display: flex; justify-content: space-between; align-items: center; margin-top: 10px; }
+    .note-text { font-size: 12px; color: var(--text-3); }
+    .admin-link { font-size: 12px; color: var(--text-3); background: none; border: none; cursor: pointer; font-family: inherit; }
+    .admin-link:hover { color: var(--text-2); }
+    .admin-link i { vertical-align: -2px; font-size: 13px; margin-right: 3px; }
+    .success-icon {
+      width: 80px; height: 80px; background: var(--green-bg); border-radius: 50%;
+      display: inline-flex; align-items: center; justify-content: center;
+    }
+    .summary-grid { display: grid; grid-template-columns: auto 1fr; gap: 5px 14px; font-size: 14px; }
+    .summary-label { color: var(--text-2); }
+    .link-btn {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: var(--blue); color: #fff;
+      padding: 10px 22px; border-radius: var(--radius-md);
+      text-decoration: none; font-size: 14px; font-weight: 500;
+      transition: background 0.15s;
+    }
+    .link-btn:hover { background: var(--blue-dark); }
+    .top-bar { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; margin-bottom: 1.25rem; }
+    .top-actions { display: flex; gap: 8px; align-items: center; }
+    .badge { background: var(--blue-bg); color: var(--blue-dark); font-size: 12px; padding: 3px 10px; border-radius: 20px; font-weight: 500; }
+    .search-bar {
+      background: var(--surface); border: 0.5px solid var(--border);
+      border-radius: var(--radius-md); padding: 9px 14px;
+      display: flex; align-items: center; gap: 8px; margin-bottom: 12px;
+    }
+    .search-bar input {
+      border: none; background: transparent; padding: 0;
+      font-size: 14px; color: var(--text); outline: none; flex: 1;
+      box-shadow: none;
+    }
+    .table-wrap { border: 0.5px solid var(--border); border-radius: var(--radius-lg); overflow: hidden; overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 580px; }
+    thead tr { background: var(--surface-2); }
+    th { padding: 11px 14px; text-align: left; font-weight: 500; color: var(--text-2); border-bottom: 0.5px solid var(--border); white-space: nowrap; }
+    td { padding: 11px 14px; border-bottom: 0.5px solid var(--border); color: var(--text); }
+    tbody tr:last-child td { border-bottom: none; }
+    tbody tr:hover { background: var(--surface-2); }
+    .del-btn { background: none; border: none; cursor: pointer; color: var(--text-3); padding: 4px; border-radius: 4px; }
+    .del-btn:hover { color: var(--red); background: rgba(216,90,48,0.08); }
+    .empty-state { text-align: center; padding: 3rem; color: var(--text-3); }
+    .empty-state i { font-size: 38px; display: block; margin-bottom: 8px; }
+    .footer-note { font-size: 12px; color: var(--text-3); text-align: right; margin-top: 8px; }
+
+    /* ===== 設定修改區域樣式 ===== */
+    .settings-card { background: var(--surface); border: 0.5px solid var(--border); border-radius: var(--radius-lg); padding: 1.25rem 1.5rem; margin-bottom: 12px; }
+    .settings-title { font-size: 13px; font-weight: 600; color: var(--text-2); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 12px; }
+    .save-btn { background: var(--blue); color: #fff; border: none; padding: 8px 18px; border-radius: var(--radius-md); font-size: 13px; cursor: pointer; font-family: inherit; }
+    .save-btn:hover { background: var(--blue-dark); }
+    .save-note { font-size: 12px; color: var(--text-3); margin-top: 8px; }
+  </style>
+</head>
+<body>
+
+<!-- ===== 前台：簽到頁 ===== -->
+<div id="page-checkin" class="page active">
+  <div class="center">
+    <div class="text-center" style="margin-bottom: 2rem;">
+      <div class="logo-circle" style="background: var(--blue-bg);">
+        <i class="ti ti-calendar-event" style="font-size: 28px; color: var(--blue);"></i>
+      </div>
+      <h1 id="meeting-title-display">會議簽到</h1>
+      <p class="subtitle" id="meeting-desc-display">請填寫以下資料完成報到</p>
+    </div>
+
+    <div class="card">
+      <div class="field">
+        <label>所屬單位<span class="required">*</span></label>
+        <input type="text" id="unit" placeholder="例：業務部、研發部、總務室" />
+        <div class="err-msg" id="err-unit">請填寫所屬單位</div>
+      </div>
+      <div class="field">
+        <label>職稱<span class="required">*</span></label>
+        <input type="text" id="title" placeholder="例：科長、專員、主任" />
+        <div class="err-msg" id="err-title">請填寫職稱</div>
+      </div>
+      <div class="field">
+        <label>姓名<span class="required">*</span></label>
+        <input type="text" id="name" placeholder="請輸入真實姓名" />
+        <div class="err-msg" id="err-name">請填寫姓名</div>
+      </div>
+      <div class="field" style="margin-bottom:0;">
+        <label>備註</label>
+        <input type="text" id="note" placeholder="選填，如：線上出席、代理出席等" />
+      </div>
+    </div>
+
+    <div class="note-row" style="margin-top: 10px;">
+      <span class="note-text">* 為必填欄位</span>
+      <button class="admin-link" onclick="showPage('page-login')">
+        <i class="ti ti-settings"></i>後台管理
+      </button>
+    </div>
+
+    <div style="margin-top: 1rem;">
+      <button class="btn btn-primary" onclick="submitCheckin()">
+        <i class="ti ti-check" style="margin-right: 6px;"></i>確認簽到
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== 前台：成功頁 ===== -->
+<div id="page-success" class="page">
+  <div class="center-sm text-center">
+    <div style="margin-bottom: 1.5rem;">
+      <div class="success-icon">
+        <i class="ti ti-circle-check" style="font-size: 42px; color: var(--green-text);"></i>
+      </div>
+    </div>
+    <h2>報到成功！</h2>
+    <p class="subtitle">感謝您的出席，即將為您開啟會議資料</p>
+
+    <div class="card" style="text-align:left; margin-bottom: 1.5rem;">
+      <div class="summary-grid" id="success-summary"></div>
+    </div>
+
+    <p style="font-size: 13px; color: var(--text-2); margin-bottom: 10px;">若未自動跳轉，請點選：</p>
+    <a id="drive-link" href="#" target="_blank" class="link-btn">
+      <i class="ti ti-folder-open"></i>前往會議資料
+    </a>
+
+    <div style="margin-top: 1.5rem;">
+      <button class="btn btn-outline" onclick="goBack()">
+        <i class="ti ti-arrow-left" style="font-size: 14px; vertical-align: -2px; margin-right: 4px;"></i>返回簽到
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== 後台：登入頁 ===== -->
+<div id="page-login" class="page">
+  <div class="center-sm">
+    <div class="text-center" style="margin-bottom: 2rem;">
+      <div class="logo-circle" style="background: var(--surface-2); margin: 0 auto;">
+        <i class="ti ti-lock" style="font-size: 26px; color: var(--text-2);"></i>
+      </div>
+      <h2>後台管理</h2>
+      <p class="subtitle">請輸入管理員密碼</p>
+    </div>
+    <div class="card">
+      <div class="field" style="margin-bottom: 16px;">
+        <label>管理員密碼</label>
+        <input type="password" id="admin-pw" placeholder="輸入密碼"
+          onkeydown="if(event.key==='Enter') doLogin()" />
+        <div class="err-msg" id="err-pw">密碼錯誤，請再試一次</div>
+      </div>
+      <button class="btn btn-primary" onclick="doLogin()">
+        <i class="ti ti-login" style="margin-right: 6px;"></i>登入
+      </button>
+    </div>
+    <div style="text-align: center; margin-top: 1rem;">
+      <button class="btn btn-outline" onclick="showPage('page-checkin')">
+        <i class="ti ti-arrow-left" style="font-size:13px;vertical-align:-2px;margin-right:4px;"></i>返回簽到頁
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== 後台：管理頁 ===== -->
+<div id="page-admin" class="page" style="max-width: 860px; margin: 0 auto;">
+  <div class="top-bar">
+    <div style="display:flex;align-items:center;gap:10px;">
+      <span style="font-size: 18px; font-weight: 600;">報到名單管理</span>
+      <span class="badge" id="count-badge">0 人</span>
+    </div>
+    <div class="top-actions">
+      <button class="btn btn-outline btn-danger" onclick="showPage('page-settings')">
+        <i class="ti ti-settings" style="font-size:14px;vertical-align:-2px;margin-right:4px;"></i>系統設定
+      </button>
+      <button class="btn btn-outline btn-danger" onclick="clearData()">
+        <i class="ti ti-trash" style="font-size:14px;vertical-align:-2px;margin-right:4px;"></i>清空資料
+      </button>
+      <button class="btn btn-outline btn-info" onclick="exportExcel()">
+        <i class="ti ti-table-export" style="font-size:14px;vertical-align:-2px;margin-right:4px;"></i>匯出 Excel
+      </button>
+      <button class="btn btn-outline" onclick="showPage('page-checkin')">
+        <i class="ti ti-arrow-left" style="font-size:14px;vertical-align:-2px;margin-right:4px;"></i>返回簽到
+      </button>
+    </div>
+  </div>
+
+  <div class="search-bar">
+    <i class="ti ti-search" style="font-size:16px;color:var(--text-3);"></i>
+    <input type="text" id="search-input" placeholder="搜尋姓名、單位或職稱…" oninput="renderTable()" />
+  </div>
+
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th style="width:44px;">#</th>
+          <th>所屬單位</th>
+          <th>職稱</th>
+          <th>姓名</th>
+          <th>備註</th>
+          <th>簽到時間</th>
+          <th style="width:40px;"></th>
+        </tr>
+      </thead>
+      <tbody id="table-body"></tbody>
+    </table>
+    <div class="empty-state" id="empty-state" style="display:none;">
+      <i class="ti ti-users"></i>
+      <span style="font-size:14px;">尚無報到資料</span>
+    </div>
+  </div>
+  <div class="footer-note">資料儲存於瀏覽器，請定期匯出 Excel 備份</div>
+</div>
+
+<!-- ===== 後台：系統設定頁 ===== -->
+<div id="page-settings" class="page" style="max-width: 520px; margin: 0 auto;">
+  <div style="display:flex;align-items:center;gap:12px;margin-bottom:1.5rem;">
+    <button class="btn btn-outline" onclick="showPage('page-admin')" style="width:auto;padding:6px 12px;">
+      <i class="ti ti-arrow-left" style="font-size:14px;vertical-align:-2px;margin-right:4px;"></i>返回
+    </button>
+    <span style="font-size:18px;font-weight:600;">系統設定</span>
+  </div>
+
+  <div class="settings-card">
+    <div class="settings-title">會議資訊</div>
+    <div class="field">
+      <label>會議標題</label>
+      <input type="text" id="set-meeting-title" placeholder="例：2025 年第三季業務會議" />
+    </div>
+    <div class="field" style="margin-bottom:0;">
+      <label>頁面說明文字</label>
+      <input type="text" id="set-meeting-desc" placeholder="例：請填寫以下資料完成報到" />
+    </div>
+  </div>
+
+  <div class="settings-card">
+    <div class="settings-title">雲端硬碟連結</div>
+    <div class="field" style="margin-bottom:0;">
+      <label>簽到完成後導向此網址</label>
+      <input type="text" id="set-drive-url" placeholder="貼上 Google Drive 或 OneDrive 分享連結" />
+    </div>
+  </div>
+
+  <div class="settings-card">
+    <div class="settings-title">安全性</div>
+    <div class="field" style="margin-bottom:0;">
+      <label>管理員密碼（留空則不修改）</label>
+      <input type="password" id="set-new-pw" placeholder="輸入新密碼" />
+    </div>
+  </div>
+
+  <button class="save-btn" onclick="saveSettings()" style="width:100%;padding:11px;">
+    <i class="ti ti-device-floppy" style="margin-right:6px;"></i>儲存設定
+  </button>
+  <p class="save-note">設定儲存於瀏覽器，換裝置或清除快取後需重新設定</p>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script>
+  // ===== 預設設定（可在後台「系統設定」頁修改）=====
+  let config = {
+    password: localStorage.getItem('cfg_pw') || 'admin1234',
+    driveUrl: localStorage.getItem('cfg_drive') || 'https://drive.google.com',
+    meetingTitle: localStorage.getItem('cfg_title') || '會議簽到',
+    meetingDesc: localStorage.getItem('cfg_desc') || '請填寫以下資料完成報到'
+  };
+
+  let records = JSON.parse(localStorage.getItem('checkin_records') || '[]');
+
+  function applyConfig() {
+    document.getElementById('meeting-title-display').textContent = config.meetingTitle;
+    document.getElementById('meeting-desc-display').textContent = config.meetingDesc;
+    document.getElementById('drive-link').href = config.driveUrl;
+  }
+
+  function showPage(id) {
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+    window.scrollTo(0, 0);
+    if (id === 'page-settings') loadSettingsForm();
+  }
+
+  function loadSettingsForm() {
+    document.getElementById('set-meeting-title').value = config.meetingTitle;
+    document.getElementById('set-meeting-desc').value = config.meetingDesc;
+    document.getElementById('set-drive-url').value = config.driveUrl;
+    document.getElementById('set-new-pw').value = '';
+  }
+
+  function saveSettings() {
+    const title = document.getElementById('set-meeting-title').value.trim();
+    const desc = document.getElementById('set-meeting-desc').value.trim();
+    const url = document.getElementById('set-drive-url').value.trim();
+    const newPw = document.getElementById('set-new-pw').value.trim();
+
+    if (title) { config.meetingTitle = title; localStorage.setItem('cfg_title', title); }
+    if (desc)  { config.meetingDesc = desc;  localStorage.setItem('cfg_desc', desc); }
+    if (url)   { config.driveUrl = url;      localStorage.setItem('cfg_drive', url); }
+    if (newPw) { config.password = newPw;    localStorage.setItem('cfg_pw', newPw); }
+
+    applyConfig();
+    alert('設定已儲存！');
+    showPage('page-admin');
+  }
+
+  function doLogin() {
+    const pw = document.getElementById('admin-pw').value;
+    const errEl = document.getElementById('err-pw');
+    if (pw === config.password) {
+      errEl.classList.remove('show');
+      document.getElementById('admin-pw').value = '';
+      renderTable();
+      showPage('page-admin');
+    } else {
+      errEl.classList.add('show');
+      document.getElementById('admin-pw').classList.add('error');
+    }
+  }
+
+  function validate() {
+    let ok = true;
+    [['unit','err-unit'],['title','err-title'],['name','err-name']].forEach(([id, err]) => {
+      const el = document.getElementById(id);
+      const errEl = document.getElementById(err);
+      if (!el.value.trim()) {
+        el.classList.add('error'); errEl.classList.add('show'); ok = false;
+      } else {
+        el.classList.remove('error'); errEl.classList.remove('show');
+      }
+    });
+    return ok;
+  }
+
+  function submitCheckin() {
+    if (!validate()) return;
+    const now = new Date();
+    const pad = n => String(n).padStart(2, '0');
+    const ts = `${now.getFullYear()}/${pad(now.getMonth()+1)}/${pad(now.getDate())} ${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;
+    const rec = {
+      unit: document.getElementById('unit').value.trim(),
+      title: document.getElementById('title').value.trim(),
+      name: document.getElementById('name').value.trim(),
+      note: document.getElementById('note').value.trim(),
+      time: ts
+    };
+    records.push(rec);
+    localStorage.setItem('checkin_records', JSON.stringify(records));
+
+    document.getElementById('success-summary').innerHTML =
+      `<span class="summary-label">單位</span><span>${rec.unit}</span>
+       <span class="summary-label">職稱</span><span>${rec.title}</span>
+       <span class="summary-label">姓名</span><strong>${rec.name}</strong>
+       <span class="summary-label">時間</span><span style="color:var(--text-2);font-size:13px;">${rec.time}</span>`;
+
+    document.getElementById('drive-link').href = config.driveUrl;
+    showPage('page-success');
+    setTimeout(() => { window.open(config.driveUrl, '_blank'); }, 1800);
+  }
+
+  function goBack() {
+    ['unit','title','name','note'].forEach(id => document.getElementById(id).value = '');
+    showPage('page-checkin');
+  }
+
+  function renderTable() {
+    const q = (document.getElementById('search-input').value || '').toLowerCase();
+    const filtered = records.filter(r =>
+      r.name.toLowerCase().includes(q) || r.unit.toLowerCase().includes(q) || r.title.toLowerCase().includes(q)
+    );
+    document.getElementById('count-badge').textContent = records.length + ' 人';
+    const tbody = document.getElementById('table-body');
+    const empty = document.getElementById('empty-state');
+    if (filtered.length === 0) { tbody.innerHTML = ''; empty.style.display = 'block'; return; }
+    empty.style.display = 'none';
+    tbody.innerHTML = filtered.map((r, i) =>
+      `<tr>
+        <td style="color:var(--text-3);font-size:13px;">${records.indexOf(r)+1}</td>
+        <td>${r.unit}</td>
+        <td>${r.title}</td>
+        <td><strong>${r.name}</strong></td>
+        <td style="color:var(--text-2);font-size:13px;">${r.note || '—'}</td>
+        <td style="color:var(--text-2);font-size:13px;font-variant-numeric:tabular-nums;">${r.time}</td>
+        <td><button class="del-btn" onclick="deleteRecord(${records.indexOf(r)})" title="刪除">
+          <i class="ti ti-x" style="font-size:15px;"></i>
+        </button></td>
+       </tr>`
+    ).join('');
+  }
+
+  function deleteRecord(idx) {
+    if (confirm(`確定要刪除 ${records[idx].name} 的簽到記錄嗎？`)) {
+      records.splice(idx, 1);
+      localStorage.setItem('checkin_records', JSON.stringify(records));
+      renderTable();
+    }
+  }
+
+  function clearData() {
+    if (records.length === 0) { alert('目前沒有資料'); return; }
+    if (confirm(`確定要清空所有 ${records.length} 筆記錄？此動作無法復原。`)) {
+      records = [];
+      localStorage.setItem('checkin_records', JSON.stringify(records));
+      renderTable();
+    }
+  }
+
+  function exportExcel() {
+    if (records.length === 0) { alert('目前沒有報到資料可匯出'); return; }
+    const headers = ['序號','所屬單位','職稱','姓名','備註','簽到時間'];
+    const data = records.map((r, i) => [i+1, r.unit, r.title, r.name, r.note||'', r.time]);
+    const wb = XLSX.utils.book_new();
+    const ws = XLSX.utils.aoa_to_sheet([headers, ...data]);
+    ws['!cols'] = [{wch:6},{wch:20},{wch:14},{wch:12},{wch:20},{wch:22}];
+    XLSX.utils.book_append_sheet(wb, ws, '報到名單');
+    const now = new Date();
+    const pad = n => String(n).padStart(2,'0');
+    XLSX.writeFile(wb, `會議報到名單_${now.getFullYear()}${pad(now.getMonth()+1)}${pad(now.getDate())}_${pad(now.getHours())}${pad(now.getMinutes())}.xlsx`);
+  }
+
+  ['unit','title','name'].forEach(id => {
+    document.getElementById(id).addEventListener('input', function() {
+      if (this.value.trim()) {
+        this.classList.remove('error');
+        document.getElementById('err-'+id).classList.remove('show');
+      }
+    });
+  });
+  document.getElementById('admin-pw').addEventListener('input', function() {
+    document.getElementById('err-pw').classList.remove('show');
+    this.classList.remove('error');
+  });
+
+  applyConfig();
+</script>
+</body>
+</html>
